@@ -5,14 +5,14 @@ import glob
 import numpy as np
 from torch.utils.data import ConcatDataset, DataLoader
 
-from quickdraw import DoodlesDataset
+from doodle import DoodlesDataset
 
 DATA_DIR = os.path.join(os.getcwd(), 'input/train_simplified/')
 print(DATA_DIR)
 BASE_SIZE = 224 # Use pre-trained size
 NCSVS = 100 # num csv files
 NCATS = 340 # num classes
-DEVICE = "cpu"
+DEVICE = "gpu"
 np.random.seed(seed=1987)
 torch.manual_seed(1987)
 
