@@ -32,4 +32,4 @@ Simply run with
 train.py
 ```
  
-Note, we expand the grayscale image into 3 dimensions to RGB. This will help to fit the MobileNet internal architecture. The optimization can be taken to boost the training performance. Training speed on CPU is very low, please try to train on a GPU.
+Note, we expand the grayscale image into 3 dimensions to RGB. This will help to fit the MobileNet internal architecture. The optimization can be taken to boost the training performance. Training speed on CPU is very low, please try to train on a GPU (change `DEVICE` to `cuda`).
