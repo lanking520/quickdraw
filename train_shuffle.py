@@ -4,48 +4,29 @@ import glob
 import numpy as np
 from torch.utils.data import ConcatDataset, DataLoader
 
-from doodle import DoodlesDataset
+from doodle_shuffle import DoodlesShuffleDataset
 from mobilenet_grayscale import get_MobileNet_grayscale
 
-DATA_DIR = os.path.join(os.getcwd(), 'input/train_simplified/')
+DATA_DIR = os.path.join(os.getcwd(), 'input/shuffle-csvs/')
 print(DATA_DIR)
-BASE_SIZE = 224  # Use pre-trained size
-NCATS = 340  # num classes
+BASE_SIZE = 64 # Use new base size
+NCSVS = 100 # num csv files
+NCATS = 340 # num classes
+STEPS = 800
+BATCH_SIZE = 680
+EPOCHS = 16
 DEVICE = "cpu"
 np.random.seed(seed=1987)
 torch.manual_seed(1987)
 
-en_dict = {}
-filenames = glob.glob(os.path.join(DATA_DIR, '*.csv'))
+filenames = glob.glob(os.path.join(DATA_DIR, '*.csv.gz'))
 filenames = sorted(filenames)
-
-
-def encode_files(filenames):
-    """ Encode all label by name of csv_files """
-    counter = 0
-    for fn in filenames:
-        en_dict[fn[:-4].split('/')[-1].replace(' ', '_')] = counter
-        counter += 1
-
-
-# collect file names and encode label
-encode_files(filenames)
-dec_dict = {v: k for k, v in en_dict.items()}
-
-
-def decode_labels(label):
-    return dec_dict[label]
-
-
-# collect all single csvset in one
-select_nrows = 10000
-doodles = ConcatDataset([DoodlesDataset(fn.split('/')[-1], DATA_DIR, en_dict,
-                                        nrows=select_nrows, size=BASE_SIZE) for fn in filenames])
+nrows = 30000
+doodles = ConcatDataset([DoodlesShuffleDataset(fn.split('/')[-1], DATA_DIR, nrows = nrows, size=BASE_SIZE) for fn in filenames])
 
 print('Train set:', len(doodles))
-# Use the torch dataloader to iterate through the dataset
-loader = DataLoader(doodles, batch_size=128, shuffle=True, num_workers=2)
 
+loader = DataLoader(doodles, batch_size = BATCH_SIZE, num_workers = 2)
 
 def accuracy(output, target, topk=(3,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -62,20 +43,6 @@ def accuracy(output, target, topk=(3,)):
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
-
-
-def validation(model, valid_loader, device, lossf, scoref):
-    model.eval()
-    loss, score = 0, 0
-    vlen = len(valid_loader)
-    for x, y in valid_loader:
-        x, y = x.to(device), y.to(device)
-        output = model(x)
-        loss += lossf(output, y).item()
-        score += scoref(output, y)[0].item()
-    model.train()
-    return loss / vlen, score / vlen
-
 
 def mapk(output, target, k=3):
     """
@@ -107,7 +74,6 @@ def mapk(output, target, k=3):
         score.mul_(1.0 / (k * batch_size))
         return score
 
-
 model = get_MobileNet_grayscale(NCATS)
 if DEVICE is "cuda":
     model.to(DEVICE)
@@ -119,13 +85,11 @@ criterion = torch.nn.CrossEntropyLoss()
 # https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
 scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5000, 12000, 18000], gamma=0.5)
 
-epochs = 5
 lsize = len(loader)
 itr = 1
-steps = 1000  # print every N iteration
 model.train()
 tloss, score = 0, 0
-for epoch in range(epochs):
+for epoch in range(EPOCHS):
     print("epoch " + str(epoch) + " start")
     for x, y in loader:
         x, y = x.to(DEVICE), y.to(DEVICE)
@@ -137,9 +101,9 @@ for epoch in range(epochs):
         tloss += loss.item()
         score += mapk(output, y)[0].item()
         scheduler.step()
-        if itr % steps == 0:
-            print('Epoch {} Iteration {} -> Train Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, itr, tloss / steps,
-                                                                                      score / steps))
+        if itr % STEPS == 0:
+            print('Epoch {} Iteration {} -> Train Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, itr, tloss / STEPS,
+                                                                                      score / STEPS))
             tloss, score = 0, 0
         itr += 1
 
