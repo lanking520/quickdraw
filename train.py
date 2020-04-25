@@ -108,10 +108,22 @@ def mapk(output, target, k=3):
 
 # https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenet.py
 model = torchvision.models.mobilenet_v2(pretrained=True)
+first_layer = list(model.features.children())[0]
+model_body = list(model.features.children())[1:]
+
+
+def squeeze_weights(m):
+    m.weight.data = m.weight.data.sum(dim=1)[:, None]
+    m.in_channels = 1
+
+# Apply on First Conv layer to take 1 dim
+list(first_layer.children())[0].apply(squeeze_weights)
+model.features = torch.nn.Sequential(first_layer, *model_body)
 model.classifier = torch.nn.Sequential(
-            torch.nn.Dropout(0.2),
-            torch.nn.Linear(1280, NCATS)
-        )
+    torch.nn.Dropout(0.2),
+    torch.nn.Linear(1280, NCATS)
+)
+
 if DEVICE is "cuda":
     model.to(DEVICE)
 
@@ -132,7 +144,6 @@ for epoch in range(epochs):
     print("epoch " + str(epoch) + " start")
     for x, y in loader:
         x, y = x.to(DEVICE), y.to(DEVICE)
-        x = x.repeat(1, 3, 1, 1)
         optimizer.zero_grad()
         output = model(x)
         loss = criterion(output, y)
