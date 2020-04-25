@@ -13,7 +13,13 @@ You can download the dataset through kaggle:
 kaggle competitions download -c quickdraw-doodle-recognition
 ```
 
-The data size is very big, around 76GB. In our use case, we just need `train_simplified` folder.
+The data size is very big, around 76GB. In our use case, we just need `train_simplified` folder (everything unzipped is arond 400 GB).
+
+```
+unzip quickdraw-doodle-recognition.zip train_simplified/* -d /input
+```
+This will download the csv files in the input folder.
+
 
 You can find more information about the data here:
 
