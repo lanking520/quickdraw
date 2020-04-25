@@ -15,6 +15,6 @@ kaggle competitions download -c quickdraw-doodle-recognition
 
 The data size is very big, around 76GB. In our use case, we just need `train_simplified` folder.
 
-You can find more information about the model here:
+You can find more information about the data here:
 
 [QuickDraw challenge](https://www.kaggle.com/c/quickdraw-doodle-recognition/data)
