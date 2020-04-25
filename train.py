@@ -122,13 +122,14 @@ criterion = torch.nn.CrossEntropyLoss()
 # https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
 scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5000,12000,18000], gamma=0.5)
 
-epochs = 10
+epochs = 2
 lsize = len(loader)
 itr = 1
-p_itr = 1000 # print every N iteration
+p_itr = 100 # print every N iteration
 model.train()
 tloss, score = 0, 0
 for epoch in range(epochs):
+    print("epoch " + str(epoch) + " start")
     for x, y in loader:
         x, y = x.to(DEVICE), y.to(DEVICE)
         x = x.repeat(1, 3, 1, 1)
