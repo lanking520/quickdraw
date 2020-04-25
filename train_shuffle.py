@@ -75,6 +75,9 @@ def mapk(output, target, k=3):
         return score
 
 model = get_MobileNet_grayscale(NCATS)
+if os.path.exists('checkpoint_mobilenet.pth'):
+    print("Found checkpoint file, continuing training...")
+    model.load_state_dict(torch.load('checkpoint_mobilenet.pth'))
 if DEVICE is "cuda":
     model.to(DEVICE)
 

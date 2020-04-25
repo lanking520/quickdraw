@@ -4,7 +4,6 @@ import os
 import numpy as np
 import cv2
 import ast
-import json
 
 class DoodlesShuffleDataset(Dataset):
     """Doodles csv dataset."""
