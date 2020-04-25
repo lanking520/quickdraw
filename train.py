@@ -12,7 +12,7 @@ print(DATA_DIR)
 BASE_SIZE = 224 # Use pre-trained size
 NCSVS = 100 # num csv files
 NCATS = 340 # num classes
-DEVICE = "gpu"
+DEVICE = "cpu"
 np.random.seed(seed=1987)
 torch.manual_seed(1987)
 
