@@ -153,7 +153,7 @@ for epoch in range(epochs):
         score += mapk(output, y)[0].item()
         scheduler.step()
         if itr % p_itr == 0:
-            print('Iteration {} -> Train Loss: {:.4f}, MAP@3: {:.3f}'.format(itr, tloss/p_itr, score/p_itr))
+            print('Epoch {} Iteration {} -> Train Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, itr, tloss/p_itr, score/p_itr))
             tloss, score = 0, 0
         itr += 1
 
