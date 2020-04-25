@@ -112,6 +112,8 @@ model.classifier = torch.nn.Sequential(
             torch.nn.Dropout(0.2),
             torch.nn.Linear(1280, NCATS)
         )
+if DEVICE is "cuda":
+    model.to(DEVICE)
 
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.002, amsgrad=True)
 criterion = torch.nn.CrossEntropyLoss()
