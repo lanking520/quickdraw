@@ -13,6 +13,11 @@ NCATS = 340
 DEVICE = "cpu"
 torch.manual_seed(1987)
 
+def writeToFile(text):
+    file_name = "output.log"
+    with open(file_name, "a+") as f:
+        f.write(text)
+
 image_transform = transforms.Compose([transforms.ToTensor()])
 
 total_data = datasets.ImageFolder(DATA_DIR, transform=image_transform)
@@ -26,6 +31,8 @@ train_data, valid_data, test_data = random_split(total_data, [train_length, vali
 train_loader = DataLoader(train_data, batch_size=BATCHSIZE, shuffle=True)
 valid_loader = DataLoader(train_data, batch_size=BATCHSIZE, shuffle=True)
 test_loader = DataLoader(train_data, batch_size=BATCHSIZE, shuffle=True)
+
+writeToFile("Trainset {} ValidSet{} testSet {}".format(train_length, test_length, valid_length))
 
 def mapk(output, target, k=3):
     """
@@ -90,7 +97,7 @@ def validation(model, valid_loader, device, lossf, scoref):
 
 model = get_MobileNet_grayscale(NCATS, pretrained=False)
 if os.path.exists('checkpoint_mobilenet.pth'):
-    print("Found checkpoint file, continuing training...")
+    writeToFile("Found checkpoint file, continuing training...")
     model.load_state_dict(torch.load('checkpoint_mobilenet.pth'))
 if DEVICE is "cuda":
     model.to(DEVICE)
@@ -103,7 +110,7 @@ itr = 1
 model.train()
 tloss, score = 0, 0
 for epoch in range(EPOCHS):
-    print("epoch " + str(epoch) + " start")
+    writeToFile("epoch " + str(epoch) + " start")
     for x, y in train_loader:
         x, y = x.to(DEVICE), y.to(DEVICE)
         optimizer.zero_grad()
@@ -114,11 +121,11 @@ for epoch in range(EPOCHS):
         tloss += loss.item()
         score += mapk(output, y)[0].item()
         if itr % STEPS == 0:
-            print('Epoch {} Iteration {} -> Train Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, itr, tloss / STEPS,
+            writeToFile('Epoch {} Iteration {} -> Train Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, itr, tloss / STEPS,
                                                                                       score / STEPS))
             tloss, score = 0, 0
         itr += 1
     vloss, vscore = validation(model, valid_loader, DEVICE, criterion, mapk)
-    print("Epoch {} -> Validation Loss: {:.4f}, Map@3: {:.3f}".format(epoch, vloss, vscore))
+    writeToFile("Epoch {} -> Validation Loss: {:.4f}, Map@3: {:.3f}".format(epoch, vloss, vscore))
     filename_pth = 'checkpoint' + str(epoch) + '_mobilenet.pth'
     torch.save(model.state_dict(), filename_pth)
