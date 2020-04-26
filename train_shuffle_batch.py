@@ -2,7 +2,7 @@ import torch
 import os
 import glob
 import numpy as np
-from torch.utils.data import ConcatDataset, DataLoader
+from torch.utils.data import ConcatDataset, DataLoader, random_split
 
 from doodle_random import DoodlesRandomDataset
 from mobilenet_grayscale import get_MobileNet_grayscale
@@ -23,10 +23,14 @@ filenames = glob.glob(os.path.join(DATA_DIR, '*.csv.gz'))
 filenames = sorted(filenames)
 
 doodles = ConcatDataset([DoodlesRandomDataset(fn.split('/')[-1], DATA_DIR, chunksize=BATCH_SIZE, size=BASE_SIZE) for fn in filenames])
+trainlength = int(len(doodles) * 0.8)
+validlength = len(doodles) - trainlength
+train_set, valid_set = random_split(doodles, lengths=[trainlength, validlength])
+print('Train set:', trainlength)
+print('Valid set:', validlength)
 
-print('Train set:', len(doodles))
-
-loader = DataLoader(doodles, batch_size = 1, num_workers = 0)
+train_loader = DataLoader(train_set, batch_size = 1, num_workers = 0, shuffle=True)
+valid_loader = DataLoader(valid_set, batch_size = 1, num_workers = 0)
 
 def accuracy(output, target, topk=(3,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -74,6 +78,22 @@ def mapk(output, target, k=3):
         score.mul_(1.0 / (k * batch_size))
         return score
 
+def validation(model, valid_loader, device, lossf, scoref):
+    model.eval()
+    loss, score = 0, 0
+    vlen = len(valid_loader)
+    for x, y in valid_loader:
+        if len(x.shape) != 3:
+            # Skip single or empty data
+            continue
+        x = x.squeeze().unsqueeze(1)
+        y = y.squeeze()
+        x, y = x.to(device), y.to(device)
+        output = model(x)
+        loss += lossf(output, y).item()
+        score += scoref(output, y)[0].item()
+    model.train()
+    return loss / vlen, score / vlen
 
 model = get_MobileNet_grayscale(NCATS, pretrained=False)
 if os.path.exists('checkpoint_mobilenet.pth'):
@@ -85,13 +105,12 @@ if DEVICE is "cuda":
 optimizer = torch.optim.Adam(model.parameters(), lr=0.002)
 criterion = torch.nn.CrossEntropyLoss()
 
-lsize = len(loader)
 itr = 1
 model.train()
 tloss, score = 0, 0
 for epoch in range(EPOCHS):
     print("epoch " + str(epoch) + " start")
-    for x, y in loader:
+    for x, y in train_set:
         if len(x.shape) != 3:
             # Skip single or empty data
             continue
@@ -110,6 +129,8 @@ for epoch in range(EPOCHS):
                                                                                       score / STEPS))
             tloss, score = 0, 0
         itr += 1
+    vloss, vscore = validation(model, valid_set, DEVICE, criterion, mapk)
+    print('Epoch {} -> Valid Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, vloss, vscore))
     filename_pth = 'checkpoint' + str(epoch) + '_mobilenet.pth'
     torch.save(model.state_dict(), filename_pth)
 
