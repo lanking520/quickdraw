@@ -32,7 +32,6 @@ def encode_files(filenames):
 encode_files(filenames)
 dec_dict = {v: k for k, v in en_dict.items()}
 
-
 def decode_labels(label):
     return dec_dict[label]
 
