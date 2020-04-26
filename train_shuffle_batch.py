@@ -110,6 +110,7 @@ for epoch in range(EPOCHS):
                                                                                       score / STEPS))
             tloss, score = 0, 0
         itr += 1
+    filename_pth = 'checkpoint' + str(epoch) + '_mobilenet.pth'
+    torch.save(model.state_dict(), filename_pth)
 
-filename_pth = 'checkpoint_mobilenet.pth'
-torch.save(model.state_dict(), filename_pth)
+

@@ -4,7 +4,6 @@ import os
 import numpy as np
 import cv2
 import json
-import gzip
 
 class DoodlesRandomDataset(Dataset):
     """Doodles csv dataset."""
@@ -26,6 +25,7 @@ class DoodlesRandomDataset(Dataset):
         self.mode = mode
         self.doodles = []
         for doodle in pd.read_csv(file, chunksize=chunksize, usecols=["drawing", "y"]):
+            doodle["drawing"] = doodle["drawing"].apply(json.loads)
             self.doodles.append(doodle)
 
         self.transform = transform
@@ -52,7 +52,6 @@ class DoodlesRandomDataset(Dataset):
         doodle = self.doodles[idx]
         # form the batch
         x = np.zeros((len(doodle), 1, self.size, self.size))
-        doodle["drawing"] = doodle["drawing"].apply(json.loads)
         for i, raw_strokes in enumerate(doodle.drawing.values):
             x[i, 0] = self._draw(raw_strokes, size=self.size, lw=2,
                                        time_color=False)
