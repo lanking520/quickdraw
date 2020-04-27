@@ -88,10 +88,11 @@ def validation(model, valid_loader, device, lossf, scoref):
     loss, score = 0, 0
     vlen = len(valid_loader)
     for x, y in valid_loader:
+        x = x.squeeze()
         if len(x.shape) != 3:
             # Skip single or empty data
             continue
-        x = x.squeeze().unsqueeze(1)
+        x = x.unsqueeze(1)
         y = y.squeeze()
         x, y = x.to(device), y.to(device)
         output = model(x)
@@ -116,10 +117,11 @@ tloss, score = 0, 0
 for epoch in range(EPOCHS):
     writeToFile("epoch " + str(epoch) + " start")
     for x, y in train_set:
+        x = x.squeeze()
         if len(x.shape) != 3:
             # Skip single or empty data
             continue
-        x = x.squeeze().unsqueeze(1)
+        x = x.unsqueeze(1)
         y = y.squeeze()
         x, y = x.to(DEVICE), y.to(DEVICE)
         optimizer.zero_grad()
@@ -138,5 +140,3 @@ for epoch in range(EPOCHS):
     writeToFile('Epoch {} -> Valid Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, vloss, vscore))
     filename_pth = 'checkpoint' + str(epoch) + '_mobilenet.pth'
     torch.save(model.state_dict(), filename_pth)
-
-
