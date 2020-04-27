@@ -116,7 +116,7 @@ model.train()
 tloss, score = 0, 0
 for epoch in range(EPOCHS):
     writeToFile("epoch " + str(epoch) + " start")
-    for x, y in train_set:
+    for x, y in train_loader:
         x = x.squeeze()
         if len(x.shape) != 3:
             # Skip single or empty data
