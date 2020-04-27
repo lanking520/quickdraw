@@ -16,9 +16,12 @@ torch.manual_seed(1987)
 def writeToFile(text):
     file_name = "output.log"
     with open(file_name, "a+") as f:
-        f.write(text)
+        f.write(text + "\n")
 
-image_transform = transforms.Compose([transforms.ToTensor()])
+image_transform = transforms.Compose([
+    transforms.Grayscale(1),
+    transforms.ToTensor()
+])
 
 total_data = datasets.ImageFolder(DATA_DIR, transform=image_transform)
 

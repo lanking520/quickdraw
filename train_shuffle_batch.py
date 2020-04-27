@@ -22,7 +22,7 @@ torch.manual_seed(1987)
 def writeToFile(text):
     file_name = "output.log"
     with open(file_name, "a+") as f:
-        f.write(text)
+        f.write(text + "\n")
 
 filenames = glob.glob(os.path.join(DATA_DIR, '*.csv.gz'))
 filenames = sorted(filenames)
