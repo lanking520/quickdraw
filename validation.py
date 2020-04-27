@@ -15,7 +15,7 @@ valid_set = DoodlesRandomDataset("train_k80.csv.gz", DATA_DIR, chunksize=BATCH_S
 valid_loader = DataLoader(valid_set, batch_size=1, num_workers=0)
 
 model = get_MobileNet_grayscale(NCATS, pretrained=False)
-model.load_state_dict(torch.load('models/checkpoint15_mobilenet.pth',  map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('models/checkpoint10_mobilenet.pth',  map_location=torch.device('cpu')))
 criterion = torch.nn.CrossEntropyLoss()
 
 if DEVICE is "cuda":
@@ -38,38 +38,6 @@ def accuracy(output, target, topk=(3,)):
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
 
-
-def mapk(output, target, k=3):
-    """
-    Computes the mean average precision at k.
-
-    Parameters
-    ----------
-    output (torch.Tensor): A Tensor of predicted elements.
-                           Shape: (N,C)  where C = number of classes, N = batch size
-    target (torch.int): A Tensor of elements that are to be predicted.
-                        Shape: (N) where each value is  0≤targets[i]≤C−1
-    k (int, optional): The maximum number of predicted elements
-
-    Returns
-    -------
-    score (torch.float):  The mean average precision at k over the output
-    """
-    with torch.no_grad():
-        batch_size = target.size(0)
-
-        _, pred = output.topk(k, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-        for i in range(k):
-            correct[i] = correct[i] * (k - i)
-
-        score = correct[:k].view(-1).float().sum(0, keepdim=True)
-        score.mul_(1.0 / (k * batch_size))
-        return score
-
-
 def validation(model, valid_loader, device, lossf, scoref):
     model.eval()
     loss, score = 0, 0
@@ -85,11 +53,11 @@ def validation(model, valid_loader, device, lossf, scoref):
         x, y = x.to(device), y.to(device)
         output = model(x)
         loss += lossf(output, y).item()
-        score += scoref(output, y)[0].item()
+        score += scoref(output, y, (1,))[0].item()
     model.train()
     return loss / vlen, score / vlen
 
 
-vloss, vscore = validation(model, valid_loader, DEVICE, criterion, mapk)
+vloss, vscore = validation(model, valid_loader, DEVICE, criterion, accuracy)
 
 print("VLoss: {}, Map@3 Score: {}".format(vloss, vscore))

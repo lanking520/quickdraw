@@ -16,8 +16,11 @@ def get_MobileNet_grayscale(classes, pretrained=True):
     # Apply on First Convolution layer to take 1 dim
     list(first_layer.children())[0].apply(squeeze_weights)
     model.features = torch.nn.Sequential(first_layer, *model_body)
+    linear = torch.nn.Linear(1280, classes)
+    torch.nn.init.normal_(linear.weight, 0, 0.01)
+    torch.nn.init.zeros_(linear.bias)
     model.classifier = torch.nn.Sequential(
         torch.nn.Dropout(0.2),
-        torch.nn.Linear(1280, classes)
+        linear
     )
     return model
