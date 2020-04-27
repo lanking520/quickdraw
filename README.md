@@ -1,7 +1,7 @@
 # quickdraw
 A simple quickdraw training code
 
-Using PyTorch with pretrained MobileNet V2.
+Using PyTorch with MobileNet V2. I customized the MobileNet V2 by using 1 channel.
 
 Please see the [reference implmentation](https://www.kaggle.com/leighplt/pytorch-starter-kit/data).
 
