@@ -136,7 +136,7 @@ for epoch in range(EPOCHS):
                                                                                       score / STEPS))
             tloss, score = 0, 0
         itr += 1
-    vloss, vscore = validation(model, valid_set, DEVICE, criterion, mapk)
+    vloss, vscore = validation(model, valid_loader, DEVICE, criterion, mapk)
     writeToFile('Epoch {} -> Valid Loss: {:.4f}, MAP@3: {:.3f}'.format(epoch, vloss, vscore))
     filename_pth = 'checkpoint' + str(epoch) + '_mobilenet.pth'
     torch.save(model.state_dict(), filename_pth)
