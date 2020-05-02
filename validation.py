@@ -11,7 +11,7 @@ BASE_SIZE = 64
 NCATS = 340
 DEVICE = "cpu"
 
-valid_set = DoodlesRandomDataset("train_k80.csv.gz", DATA_DIR, chunksize=BATCH_SIZE, size=BASE_SIZE)
+valid_set = DoodlesRandomDataset("train_k99.csv.gz", DATA_DIR, chunksize=BATCH_SIZE, size=BASE_SIZE)
 valid_loader = DataLoader(valid_set, batch_size=1, num_workers=0)
 
 model = get_MobileNet_grayscale(NCATS, pretrained=False)
@@ -53,11 +53,15 @@ def validation(model, valid_loader, device, lossf, scoref):
         x, y = x.to(device), y.to(device)
         output = model(x)
         loss += lossf(output, y).item()
-        score += scoref(output, y, (1,))[0].item()
-    model.train()
+        score += scoref(output, y, (3,))[0].item()
     return loss / vlen, score / vlen
 
 
 vloss, vscore = validation(model, valid_loader, DEVICE, criterion, accuracy)
 
 print("VLoss: {}, Map@3 Score: {}".format(vloss, vscore))
+
+model.eval()
+sample = torch.ones((1, 1, 64, 64))
+traced_model = torch.jit.trace(model, sample)
+traced_model.save("doodle_mobilenet.pt")
